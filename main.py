@@ -3,18 +3,40 @@ import pandas as pd
 import plotly.express as px
 import mysql.connector
 
+
 # 1. Función para conectar Python con tu base de datos
-def conectar_base_datos(consulta_sql):
-    conexion = mysql.connector.connect(
-        host="localhost",
-        user="root",        # Por defecto en XAMPP/Workbench es root
-        password="",        # Pon tu contraseña aquí si tienes una
-        database="EPM"
-    )
+# def conectar_base_datos(consulta_sql):
+ #   conexion = mysql.connector.connect(
+  #      host="localhost",
+  #      user="root",        # Por defecto en XAMPP/Workbench es root
+  #      password="",        # Pon tu contraseña aquí si tienes una
+  #      database="EPM"
+   # )
     # Leemos la consulta y la guardamos en una tabla (DataFrame)
-    resultado = pd.read_sql(consulta_sql, conexion)
-    conexion.close()
-    return resultado
+   # resultado = pd.read_sql(consulta_sql, conexion)
+    #conexion.close()
+    #return resultado 
+
+def conectar_base_datos(consulta_sql):
+    try:
+        # Aquí st.secrets buscará las claves que configuraremos luego
+        conexion = mysql.connector.connect(
+            host=st.secrets["DB_HOST"],
+            port=int(st.secrets["DB_PORT"]),
+            user=st.secrets["DB_USER"],
+            password=st.secrets["DB_PASSWORD"],
+            database=st.secrets["DB_NAME"]
+        )
+        resultado = pd.read_sql(consulta_sql, conexion)
+        conexion.close()
+        return resultado
+    except Exception as e:
+        st.error(f"Error al conectar con la base de datos: {e}")
+        return pd.DataFrame()
+
+
+
+
 
 # 2. Configuración visual de la página
 st.set_page_config(page_title="Portal Energético EPM", layout="wide")
