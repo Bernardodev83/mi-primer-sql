@@ -1,0 +1,62 @@
+import streamlit as st
+import pandas as pd
+import plotly.express as px
+import mysql.connector
+
+# 1. Función para conectar Python con tu base de datos
+def conectar_base_datos(consulta_sql):
+    conexion = mysql.connector.connect(
+        host="localhost",
+        user="root",        # Por defecto en XAMPP/Workbench es root
+        password="",        # Pon tu contraseña aquí si tienes una
+        database="EPM"
+    )
+    # Leemos la consulta y la guardamos en una tabla (DataFrame)
+    resultado = pd.read_sql(consulta_sql, conexion)
+    conexion.close()
+    return resultado
+
+# 2. Configuración visual de la página
+st.set_page_config(page_title="Portal Energético EPM", layout="wide")
+st.title("⚡ Panel de Control Energético EPM")
+st.markdown("Bienvenido al sistema de visualización de proyectos.")
+
+# 3. Creando los gráficos profesionales
+st.header("Análisis de Inversiones")
+
+# Consulta SQL: Sumamos el monto por tipo de energía
+query_pie = """
+SELECT t.tipo, SUM(i.monto) as total 
+FROM inversiones i
+JOIN proyectos p ON i.proyecto_id = p.id_proyecto
+JOIN tipos_energia t ON p.tipo_energia = t.id_tipo
+GROUP BY t.tipo
+"""
+df_inversion = conectar_base_datos(query_pie)
+
+# Creamos un gráfico de torta con Plotly
+fig = px.pie(df_inversion, values='total', names='tipo', title="Distribución de Inversión por Tecnología")
+st.plotly_chart(fig)
+
+# 4. Tabla de proyectos registrados
+st.header("Listado de Proyectos Actuales")
+df_proyectos = conectar_base_datos("SELECT nombre, ubicacion, fecha_inicio FROM proyectos")
+st.table(df_proyectos)
+
+# --- NUEVA FUNCIÓN: Filtro Interactivo ---
+st.sidebar.header("Filtros")
+opciones_proyectos = conectar_base_datos("SELECT nombre FROM proyectos")
+proyecto_seleccionado = st.sidebar.selectbox("Selecciona un Proyecto", opciones_proyectos['nombre'])
+
+st.subheader(f"Detalle de: {proyecto_seleccionado}")
+
+# Consulta dinámica filtrada
+query_detalle = f"""
+    SELECT p.nombre, p.ubicacion, t.tipo as energia, i.monto as inversion
+    FROM proyectos p
+    JOIN tipos_energia t ON p.tipo_energia = t.id_tipo
+    JOIN inversiones i ON p.id_proyecto = i.proyecto_id
+    WHERE p.nombre = '{proyecto_seleccionado}'
+"""
+df_detalle = conectar_base_datos(query_detalle)
+st.write(df_detalle)
