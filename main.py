@@ -60,3 +60,34 @@ query_detalle = f"""
 """
 df_detalle = conectar_base_datos(query_detalle)
 st.write(df_detalle)
+
+col1, col2, col3 = st.columns(3)
+
+# Calculamos algunos totales desde la base de datos
+total_inv = df_inversion['total'].sum()
+num_proyectos = len(df_proyectos)
+
+with col1:
+    st.metric(label="Inversión Total", value=f"${total_inv:,.0f}")
+with col2:
+    st.metric(label="Total de Proyectos", value=num_proyectos)
+with col3:
+    st.metric(label="Eficiencia Promedio", value="85%", delta="5%") # Ejemplo estático
+
+
+st.subheader("⚡ Generación por Proyecto (kWh)")
+
+query_eficiencia = """
+SELECT p.nombre, e.kw_h_generado 
+FROM eficiencia_energetica e
+JOIN proyectos p ON e.proyecto_id = p.id_proyecto
+"""
+df_efi = conectar_base_datos(query_eficiencia)
+
+if not df_efi.empty:
+    fig_bar = px.bar(df_efi, x='nombre', y='kw_h_generado', 
+                     color='nombre', text_auto='.2s',
+                     title="Energía Generada por Planta")
+    st.plotly_chart(fig_bar, use_container_width=True)
+
+    
