@@ -214,3 +214,46 @@ with st.sidebar:
     
     st.metric("Nuevo Presupuesto", f"${nuevo_total:,.0f}")
     st.write("Esta proyección afecta a todos los cálculos del dashboard.")
+
+
+
+st.markdown("---")
+st.header("💎 Recursos Minerales Estratégicos")
+st.write("Relación de minerales críticos encontrados en las zonas de influencia de los proyectos.")
+
+# Consulta de minerales
+query_minerales = """
+SELECT m.nombre as Mineral, m.ubicacion as Region, p.nombre as Proyecto_Asociado, m.descripcion
+FROM minerales m
+JOIN proyectos p ON m.proyecto_asociado = p.id_proyecto
+"""
+df_min = conectar_base_datos(query_minerales)
+
+# Usamos un buscador de texto para filtrar la tabla
+busqueda = st.text_input("Filtrar por nombre de mineral (ej. Litio):")
+
+if busqueda:
+    df_min = df_min[df_min['Mineral'].str.contains(busqueda, case=False)]
+
+st.dataframe(df_min, use_container_width=True) 
+
+st.subheader("📍 Concentración de Inversión por Ubicación")
+
+query_mapa = """
+SELECT p.ubicacion, SUM(i.monto) as total_monto
+FROM proyectos p
+JOIN inversiones i ON p.id_proyecto = i.proyecto_id
+GROUP BY p.ubicacion
+ORDER BY total_monto DESC
+"""
+df_mapa = conectar_base_datos(query_mapa)
+
+fig_mapa = px.bar(df_mapa, x='total_monto', y='ubicacion', 
+                  orientation='h', 
+                  color='total_monto',
+                  labels={'total_monto':'Inversión ($)', 'ubicacion':'Región'},
+                  color_continuous_scale='Viridis')
+
+st.plotly_chart(fig_mapa, use_container_width=True)
+
+

@@ -6,3 +6,6 @@ para actualizar mi repositorio
 git add .
 git commit -m "ejeñpljd"
 git push origin master
+
+
+streamlit run yourscript.py
