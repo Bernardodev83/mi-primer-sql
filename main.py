@@ -50,6 +50,56 @@ proyecto_seleccionado = st.sidebar.selectbox("Selecciona un Proyecto", opciones_
 
 st.subheader(f"Detalle de: {proyecto_seleccionado}")
 
+
+
+# --- SECCIÓN: EXPLORADOR DETALLADO DE EQUIPO ---
+st.markdown("---")
+st.header("👥 Equipo y Aliados por Proyecto")
+
+# 1. Obtenemos la lista de proyectos para el buscador
+proyectos_lista = conectar_base_datos("SELECT nombre FROM proyectos")
+seleccion = st.selectbox("Busca un proyecto para ver el equipo técnico:", proyectos_lista['nombre'])
+
+# 2. Consulta Relacional: Investigadores + Empresas + Proyecto
+query_equipo = f"""
+    SELECT 
+        i.nombre AS Investigador, 
+        i.apellido, 
+        i.especialidad,
+        e.nombre AS Empresa,
+        e.industria
+    FROM proyectos p
+    LEFT JOIN investigadores i ON p.id_proyecto = i.proyecto_id
+    LEFT JOIN empresas e ON p.id_proyecto = e.proyecto_id
+    WHERE p.nombre = '{seleccion}'
+"""
+
+df_equipo = conectar_base_datos(query_equipo)
+
+# 3. Mostrar la información de forma elegante
+if not df_equipo.empty:
+    col_inv, col_emp = st.columns(2)
+    
+    with col_inv:
+        st.subheader("👨‍🔬 Investigador a cargo")
+        nombre_completo = f"{df_equipo['Investigador'][0]} {df_equipo['apellido'][0]}"
+        st.info(f"**Nombre:** {nombre_completo}\n\n**Especialidad:** {df_equipo['especialidad'][0]}")
+        
+    with col_emp:
+        st.subheader("🏢 Empresa Aliada")
+        st.success(f"**Nombre:** {df_equipo['Empresa'][0]}\n\n**Sector:** {df_equipo['industria'][0]}")
+else:
+    st.warning("No se encontró personal asignado a este proyecto.")
+
+
+
+
+
+
+
+
+
+
 # Consulta dinámica filtrada
 query_detalle = f"""
     SELECT p.nombre, p.ubicacion, t.tipo as energia, i.monto as inversion
@@ -62,6 +112,18 @@ df_detalle = conectar_base_datos(query_detalle)
 st.write(df_detalle)
 
 col1, col2, col3 = st.columns(3)
+
+
+
+
+
+
+
+
+
+
+
+
 
 # Calculamos algunos totales desde la base de datos
 total_inv = df_inversion['total'].sum()
@@ -90,5 +152,65 @@ if not df_efi.empty:
                      title="Energía Generada por Planta")
     st.plotly_chart(fig_bar, use_container_width=True)
 
- 
+
+st.markdown("---")
+st.header("🚀 Simulador de Inversión Estratégica")
+st.write("Mueve el deslizador para ver cómo impactaría un aumento de capital en el presupuesto total de EPM.")
+
+# 1. Creamos el Slider en la barra lateral o en el centro
+porcentaje = st.slider("Selecciona el porcentaje de aumento (%)", 0, 100, 10)
+
+# 2. Obtenemos el total actual (usando la tabla que ya teníamos)
+inversion_actual = df_inversion['total'].sum()
+
+# 3. Calculamos los nuevos valores
+aumento_dinero = inversion_actual * (porcentaje / 100)
+nueva_inversion_total = inversion_actual + aumento_dinero
+
+# 4. Mostramos el resultado con un diseño llamativo
+c1, c2 = st.columns(2)
+with c1:
+    st.metric("Inversión Proyectada", f"${nueva_inversion_total:,.2f}", f"+{porcentaje}%")
+with c2:
+    st.metric("Capital Adicional Necesario", f"${aumento_dinero:,.2f}")
+
+# 5. Gráfico comparativo
+df_simulacion = pd.DataFrame({
+    'Escenario': ['Actual', 'Con Aumento'],
+    'Monto': [inversion_actual, nueva_inversion_total]
+})
+
+fig_sim = px.bar(df_simulacion, x='Escenario', y='Monto', 
+                 color='Escenario', text_auto='.2s',
+                 title="Comparativa: Presupuesto Actual vs Proyectado")
+st.plotly_chart(fig_sim)    
+
+
+# Crea tres pestañas en la parte superior
+tab1, tab2, tab3 = st.tabs(["📈 Dashboard Principal", "⚡ Eficiencia", "💰 Simulador"])
+
+with tab1:
+    # Aquí mueves el código del gráfico de torta y la tabla de proyectos
+    st.write("Visualización general de la base de datos.")
+
+with tab2:
+    # Aquí mueves el código de eficiencia (kWh)
+    st.write("Análisis detallado de producción.")
+
+with tab3:
+    # Aquí pones el código del simulador que acabamos de escribir
+    st.write("Herramienta de proyección financiera.")
+
+
+
+# Mover el simulador a la izquierda (Sidebar)
+with st.sidebar:
+    st.title("⚙️ Configuración")
+    porcentaje = st.slider("Aumento de Presupuesto (%)", 0, 100, 10)
     
+    # Cálculos rápidos
+    total_actual = df_inversion['total'].sum()
+    nuevo_total = total_actual * (1 + porcentaje/100)
+    
+    st.metric("Nuevo Presupuesto", f"${nuevo_total:,.0f}")
+    st.write("Esta proyección afecta a todos los cálculos del dashboard.")
