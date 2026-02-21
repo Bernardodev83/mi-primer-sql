@@ -1,2 +1,8 @@
 streamlit run main.py
 sirver para crar o arrancar el proyecto en la web
+
+
+para actualizar mi repositorio 
+git add .
+git commit -m "ejeñpljd"
+git push origin master
