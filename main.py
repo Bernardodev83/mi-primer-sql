@@ -90,4 +90,5 @@ if not df_efi.empty:
                      title="Energía Generada por Planta")
     st.plotly_chart(fig_bar, use_container_width=True)
 
+ 
     
