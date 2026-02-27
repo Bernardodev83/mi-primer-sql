@@ -63,21 +63,77 @@ def registrar_usuario(nuevo_usuario, nueva_clave):
             st.error(f"Error al registrar: {err}")
         return False
 
+
 def aplicar_diseno_login():
+    # URL de la imagen de fondo con tintado verde
     img_url = "https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?auto=format&fit=crop&w=1350&q=80"
+    
     st.markdown(f"""
         <style>
+        /* 1. Fondo principal y Texto base */
         .stApp {{
-            background-image: url("{img_url}");
+            background-color: #004d40; /* Verde Azulado Profundo (Teal Deep) */
+            background-image: linear-gradient(135deg, #004d40 0%, #006064 100%), url("{img_url}");
             background-size: cover;
             background-position: center;
+            background-blend-mode: overlay; /* Combina la imagen con el color */
+            color: #ffffff;
         }}
+        
+        /* 2. El Recuadro de Login/Registro */
         .login-box {{
-            background-color: rgba(255, 255, 255, 0.9);
+            background-color: rgba(255, 255, 255, 0.95); /* Blanco casi opaco */
             padding: 40px;
             border-radius: 20px;
-            box-shadow: 0px 10px 25px rgba(0,0,0,0.5);
+            box-shadow: 0px 10px 30px rgba(0,0,0,0.6);
+            border: 2px solid #ffca28; /* Borde dorado sutil */
         }}
+        
+        /* 3. Títulos principales y Subtítulos */
+        .login-box h1 {{
+            color: #ffc107 !important; /* Dorado Intenso (Gold) */
+            text-align: center;
+        }}
+        .login-box h3 {{
+            color: #00796b !important; /* Verde Agua (Teal) */
+            text-align: center;
+        }}
+        
+        /* 4. Botones y Elementos Activos (Selectores, Pestañas) */
+        .stButton>button {{
+            background-color: #00796b !important; /* Verde Agua Profundo */
+            color: white !important;
+            border-radius: 10px !important;
+            border: none !important;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }}
+        .stButton>button:hover {{
+            background-color: #ffc107 !important; /* Dorado al pasar el mouse */
+            color: #004d40 !important;
+            box-shadow: 0px 5px 15px rgba(255,193,7,0.4);
+        }}
+        
+        /* 5. Los Selectores de Entrada de Texto */
+        .stTextInput>div>div>input {{
+            border-color: #ffca28 !important; /* Borde dorado sutil */
+        }}
+        
+        /* 6. Las Pestañas (Tabs) */
+        button[data-baseweb="tab"] {{
+            color: #006064 !important; /* Teal oscuro */
+        }}
+        button[data-baseweb="tab"][aria-selected="true"] {{
+            color: #ffc107 !important; /* Dorado para la activa */
+            border-color: #ffc107 !important;
+        }}
+        
+        /* 7. La Barra Lateral (Sidebar) */
+        section[data-testid="stSidebar"] {{
+            background-color: #006064 !important; /* Teal oscuro */
+            color: white;
+        }}
+        
         </style>
     """, unsafe_allow_html=True)
 
@@ -91,11 +147,19 @@ if not st.session_state.logeado:
     
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        st.markdown('<div class="login-box">', unsafe_allow_html=True)
-        st.title("⚡ Sistema EPM")
-        st.subheader("Bienvenido al Portal de Gestión")
+        # 1. Ponemos la imagen PRIMERO (fuera del div de HTML para evitar errores)
+        # Esta es una imagen de una represa hidroeléctrica (estilo EPM)
+        st.image("https://cambio.com.co/wp-content/uploads/2021/05/Energi%CC%81a-renovable-y-no-renovable.-10-tipos-de-energi%CC%81a-5-1024x576.jpg", 
+                 caption="Conoce nuestros proyectos Energeticos", 
+                 use_container_width=True)
         
-        tab_login, tab_reg = st.tabs(["🔐 Iniciar Sesión", "📝 Registrarse"])
+        # 2. Ahora abrimos el recuadro blanco para el formulario
+       # st.markdown('<div class="login-box">', unsafe_allow_html=True)
+        
+        st.title("⚡ Sistema EPM")
+        st.subheader("Acceso al Panel de Gestión")
+        
+        tab_login, tab_reg = st.tabs(["🔐 Entrar", "📝 Registrarse"])
         
         with tab_login:
             user = st.text_input("Usuario", key="login_user")
@@ -109,20 +173,17 @@ if not st.session_state.logeado:
         
         with tab_reg:
             st.subheader("Crear nueva cuenta")
-            nuevo_user = st.text_input("Nombre de usuario deseado", key="reg_user")
-            nueva_pw = st.text_input("Contraseña", type="password", key="reg_pw")
-            confirmar_pw = st.text_input("Repite la contraseña", type="password", key="reg_pw_conf")
+            nuevo_user = st.text_input("Nombre de usuario", key="reg_user")
+            nueva_pw = st.text_input("Clave", type="password", key="reg_pw")
+            confirmar_pw = st.text_input("Confirmar Clave", type="password", key="reg_pw_conf")
             
             if st.button("Confirmar Registro"):
-                if nuevo_user and nueva_pw:
-                    if nueva_pw == confirmar_pw:
-                        if registrar_usuario(nuevo_user, nueva_pw):
-                            st.success("¡Registro exitoso! Ahora puedes ir a la pestaña de 'Iniciar Sesión'.")
-                            st.balloons()
-                    else:
-                        st.warning("Las contraseñas no coinciden.")
+                if nuevo_user and nueva_pw == confirmar_pw:
+                    if registrar_usuario(nuevo_user, nueva_pw):
+                        st.success("¡Registrado! Ya puedes iniciar sesión.")
+                        st.balloons()
                 else:
-                    st.warning("Por favor, completa todos los campos.")
+                    st.warning("Las claves no coinciden o faltan datos.")
         
         st.markdown('</div>', unsafe_allow_html=True)
 
